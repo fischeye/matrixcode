@@ -1,101 +1,81 @@
-import numpy as np
 import random as rnd
 import time
+import pygame
 
+# Description of the Code
+# --------------------------
+# * a Block Starts in the top third of the Screen at a Random Position
+# * a Block Ends at a random Length
+# * the Block extends with additional Characters at the lower end
+# * the last Character is highlighted in a different Color (white)
+# * a Block disappears after a short time
 class OneCode:
+    def __init__(self, PositionX, PositionY, LengthY):
+        self.PosX = PositionX
+        self.PosY = PositionY
+        self.EndY = self.PosY + LengthY
+        self.Leader = True
+        self.Lifetime = pygame.time.get_ticks() + (int(rnd.randint(6000, 7000)))
+        print(self.Lifetime)
+        print(pygame.time.get_ticks())
+        self.Color = (70, 200, 70)
+        self.Value = rnd.randint(65, 125)
 
-    def __init__(self, px, py):
-        self.posx = px
-        self.posy = py
-        self.maxlength = rnd.randint(5, 10)
-        self.codeblock = []
-        self.reached_end = False
+SizeX = 400
+SizeY = 300
 
-    def extend_code(self):
-        if (len(self.codeblock) < self.maxlength):
-            if (len(self.codeblock) > 0):
-                rInt = rnd.randint(0, 52) + 65
-                self.codeblock[len(self.codeblock) - 1] = rInt
-            self.codeblock.append(35)
-        else:
-            self.reached_end = True
+pygame.init()
+Screen = pygame.display.set_mode((SizeX, SizeY))
+pyFont = pygame.font.SysFont("Calibri", 12)
 
-    def get_code(self):
-        return self.codeblock
+CodeList = []
+CodeList.append(OneCode(5, 2, 20))
 
-def display_matrix(someMatrix):
-    s = ""
-    for linefill in range(sizeX):
-        s += "*"
-    print(s)
-    for x in range(0, someMatrix.shape[0]):
-        line = ""
-        for y in range(0, someMatrix.shape[1]):
-            line = line + chr(someMatrix[x][y])
-        print('*' + line + '*')
-    print(s)
+matrix_tick = pygame.time.get_ticks()
 
-def add_code_block():
-    rndX = rnd.randint(0, sizeX - 1)
-    rndY = int(rnd.randint(0, sizeY - 1) / 2)
-    aCode = OneCode(rndX, rndY)
-    print("Create Random Code: " + str(rndX) + " / " + str(rndY), " -> ", aCode.maxlength)
-    codeList.append(aCode)
+mainloop = True
+while mainloop:
 
+    # Listen for Events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            mainloop = False
 
-sizeX = 60
-sizeY = 20
-# Create 2d Array filled with Int-Value 32 (32 = ASCII Space)
-matrix = np.full((sizeY, sizeX), 32, dtype=int)
-codeList = []
+    # Fill Screen with Single Color (Black)
+    Screen.fill((0, 0, 0))
 
-print("Create Random Code Blocks")
-for numblocks in range(5):
-    add_code_block()
+    # Loop through every Code and Draw it on the Screen
+    for ac in CodeList:
+        curX = ac.PosX * 12
+        curY = ac.PosY * 12
+        curColor = (255, 255, 255)
+        if (ac.Leader == False):
+            curColor = ac.Color
+        ntxt = pyFont.render(chr(ac.Value), True, curColor)
+        Screen.blit(ntxt, (curX, curY))
 
-print("Start Raining Code")
-addnew = 5
-loops = 0
-while loops < 80:
-    loops += 1
+    # Switch current Screen to the Display
+    pygame.display.flip()
 
-    # --------------------------------
-    # Add new CodeBlocks every 5 Loops
-    if addnew == 0:
-        addnew = 5
-        for numblocks in range(5):
-            add_code_block()
-    else:
-        addnew -= 1
-
-    # ------------------------
-    # Calculate new CodeBlocks
-    print("calculate blocks")
-    blockids = []
-    for codeIndex in range(len(codeList)):
-        codeList[codeIndex].extend_code()
-        if codeList[codeIndex].reached_end == True:
-            print("Delete CodeBlock: ", codeIndex)
-            blockids.append(codeIndex)
-
-    # ----------------------
-    # Delete finished Blocks
-    diff = 0
-    for bid in blockids:
-        codeList.pop(bid - diff)
-        diff += 1
-
-    # ------------------------------
-    # Refresh Matrix with CodeBlocks
-    print("refresh matrix")
-    for codeIndex in range(len(codeList)):
-        curCode = codeList[codeIndex]
-        for codeY in range(len(curCode.codeblock)):
-            matrix[curCode.posy + codeY, curCode.posx] = curCode.codeblock[codeY]
-
-    # ----------------------
-    # Display current Matrix
-    display_matrix(matrix)
-    time.sleep(0.25)
-
-
+    # If Tick has passed, update every Code
+    if (pygame.time.get_ticks() - matrix_tick) > 250:
+        matrix_tick = pygame.time.get_ticks()
+        removeList = []
+        appendList = []
+        # Update every Code, create new Code, change Code settings
+        for ac in CodeList:
+            if (ac.PosY != ac.EndY):
+                if (ac.Leader == True):
+                    nc = OneCode(ac.PosX, ac.PosY + 1, ac.EndY - ac.PosY - 1)
+                    appendList.append(nc)
+                    ac.Leader = False
+            else:
+                ac.Leader = False
+            if (pygame.time.get_ticks() > ac.Lifetime):
+                removeList.append(ac)
+        # Remove Code which has End Of Lifetime
+        for rc in removeList:
+            CodeList.remove(rc)
+        # Add new Code
+        for ac in appendList:
+            CodeList.append(ac)
