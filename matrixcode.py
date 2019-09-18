@@ -1,5 +1,4 @@
 import random as rnd
-import time
 import pygame
 
 # Description of the Code
@@ -15,36 +14,63 @@ class OneCode:
         self.PosY = PositionY
         self.EndY = self.PosY + LengthY
         self.Leader = True
-        self.Lifetime = pygame.time.get_ticks() + (int(rnd.randint(6000, 7000))) # Random Number in Milliseconds
-        self.Color = (70, 200, 70)  # Green Color
+        self.FadeOut = False
+        self.FadeText = False
+        self.Lifetime = int(rnd.randint(6000, 7000)) # Random Number in Milliseconds
+        self.TextColor = (70, 200, 70)  # Green Color
         self.Value = rnd.randint(97, 122)   # ASCII Integer
     def Update(self):
-        if (3 > int(rnd.randint(0,100))):
+        if (3 > int(rnd.randint(0, 100))):
             self.Value = rnd.randint(97, 122)
-
-def AddCode():
-    rndX = int(rnd.randint(0, GSizeX))
-    rndY = int(rnd.randint(0, int(GSizeY / 2)))
-    lenC = int(rnd.randint(10, 30))
-    return OneCode(rndX, rndY, lenC)
+        if self.FadeText:
+            pass
 
 
-SizeX = 1024
-SizeY = 768
+
+class TheMatrix:
+    def __init__(self, GridX, GridY):
+        self.GridSizeX = GridX
+        self.GridSizeY = GridY
+        self.CodeList = []
+        self.BackgroundColor = (0, 0, 0)
+        self.CodeHighlightColor = (255, 255, 255)
+        self.CodeTextColor = (70, 200, 70)
+
+    def AddCode(self, Count):
+        for _ in range(Count):
+            rndX = int(rnd.randint(0, self.GridSizeX))
+            rndY = int(rnd.randint(0, int(self.GridSizeX / 2)))
+            lenC = int(rnd.randint(10, 30))
+            self.CodeList.append(OneCode(rndX, rndY, lenC))
+
+    def UpdateCode(self):
+        for CodeID in len(self.CodeList):
+            pass
+
+
+WinSizeX = 1024
+WinSizeY = 768
+AddNewCodePerTick = 10
+CodeFont = "matrix code nfi.ttf"
+CodeFontSize = 20
+
 
 # Setup Graphics with pygame
 pygame.init()
-Screen = pygame.display.set_mode((SizeX, SizeY))
-pyFont = pygame.font.Font(r"C:\DATA\Workspace\matrixcode\matrix code nfi.ttf", 20)
+Screen = pygame.display.set_mode((WinSizeX, WinSizeY))
+pyFont = pygame.font.Font(CodeFont, CodeFontSize)
 # Calculate size for a single Character
 FSizeX, FSizeY = pyFont.size("W")
-GSizeX = int(SizeX / FSizeX)
-GSizeY = int(SizeY / FSizeY)
+GridSizeX = int(WinSizeX / FSizeX)
+GridSizeY = int(WinSizeY / FSizeY)
+
+
+Matrix01 = TheMatrix(GridSizeX, GridSizeY)
+
 
 # Add Code
 CodeList = []
-for _ in range(int(GSizeX * 0.10)):
-    CodeList.append(AddCode())
+Matrix01.AddCode(int(GridSizeX * 0.10))
 
 matrix_tick = pygame.time.get_ticks()
 addcode_tick = pygame.time.get_ticks()
@@ -79,10 +105,7 @@ while mainloop:
     # Add more Code
     if (pygame.time.get_ticks() - addcode_tick) > 1000:
         # Calculate a Random Number for new Codes. Some Percent from the max X-Range
-        newCodeCount = int(rnd.randint(1, int(GSizeX * 0.05)))
-        print("Add New Code: ", newCodeCount)
-        for _ in range(newCodeCount):
-            CodeList.append(AddCode())
+        Matrix01.AddCode(int(GridSizeX * 0.10))
         addcode_tick = pygame.time.get_ticks()
 
     # If Tick has passed, update every Code
